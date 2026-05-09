@@ -1,0 +1,95 @@
+// api/user/[username]/top-videos.js
+// Helper: CORS headers (keep same as your other endpoints)
+function setCorsHeaders(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-API-Key, Authorization, Content-Type');
+}
+
+// Fetch secUid from username (same as in videos.js)
+async function getSecUidFromUsername(username) {
+  const url = `https://www.tiktok.com/@${username}`;
+  const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const html = await response.text();
+  const match = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application\/json">(.*?)<\/script>/s);
+  if (!match) throw new Error('Profile not found');
+  const data = JSON.parse(match[1]);
+  const userInfo = data['__DEFAULT_SCOPE__']['webapp.user-detail']?.userInfo;
+  if (!userInfo) throw new Error('User data missing');
+  return userInfo.user.secUid;
+}
+
+export default async function handler(req, res) {
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    return res.status(200).end();
+  }
+  setCorsHeaders(res);
+  
+  // Authentication (same as your other endpoints)
+  const authHeader = req.headers['x-api-key'] || req.headers['authorization'];
+  if (authHeader !== process.env.API_SECRET_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  const { username } = req.query;
+  if (!username) return res.status(400).json({ error: 'Missing username' });
+  
+  const sortBy = req.query.sortBy === 'diggCount' ? 'diggCount' : 'playCount';
+  const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+  
+  try {
+    // 1. Get secUid from username
+    const secUid = await getSecUidFromUsername(username);
+    
+    // 2. Fetch TikTok's internal API (same as videos.js, but we fetch up to 50 items to sort)
+    const apiUrl = `https://www.tiktok.com/api/user/item_list/?secUid=${encodeURIComponent(secUid)}&count=50&cookie_enabled=true`;
+    const response = await fetch(apiUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': `https://www.tiktok.com/@${username}`,
+        'Accept': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error(`TikTok API returned ${response.status}`);
+    const data = await response.json();
+    const items = data.itemList || [];
+    
+    // 3. Sort by the chosen metric (descending)
+    const sorted = [...items].sort((a, b) => b.stats[sortBy] - a.stats[sortBy]);
+    
+    // 4. Take top N
+    const topVideos = sorted.slice(0, limit);
+    
+    // 5. Format the response (same format as your existing videos endpoint)
+    const formatted = topVideos.map(v => ({
+      id: v.id,
+      videoUrl: v.video.playAddr,
+      cover: v.video.cover,
+      width: v.video.width,
+      height: v.video.height,
+      duration: v.video.duration,
+      playCount: v.stats.playCount,
+      diggCount: v.stats.diggCount,
+      commentCount: v.stats.commentCount,
+      shareCount: v.stats.shareCount,
+      downloadCount: v.stats.downloadCount,
+      description: v.desc,
+      createTime: v.createTime,
+      hashtags: v.textExtra?.filter(t => t.hashtagName).map(t => t.hashtagName) || []
+    }));
+    
+    res.status(200).json({
+      success: true,
+      username,
+      secUid,
+      sortBy,
+      limit: formatted.length,
+      videos: formatted,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Top videos API error:', err);
+    res.status(500).json({ error: err.message || 'Failed to fetch top videos' });
+  }
+}
