@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>TikTok Proxy API – Documentation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Montserrat:wght@500;600;700&family=Lato:wght@400;700&family=Source+Code+Pro:wght@400;500&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ========== 1. CSS RESET & VARIABLES ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --header-bg-light: rgba(255, 255, 255, 0.92);
+      --header-border-light: rgba(0, 0, 0, 0.08);
+      --footer-bg-light: rgba(240, 245, 250, 0.9);
+      --footer-border-light: rgba(0, 0, 0, 0.06);
+      --btn-bg-light: rgba(0, 0, 0, 0.08);
+      --btn-text-light: #000;
+      --body-bg-light: #eef2f5;
+      --content-text-light: #1e2a3a;
+      --header-height: 50px;
+      --footer-height: 30px;
+      --footer-text-light: #555;
+      --tiktok-pink: #FE2C55;
+      --tiktok-cyan: #25F4EE;
+      --tab-active-color-light: #0a6b6b;
+      --tab-active-color-dark: #25F4EE;
+      --example-color-light: #777;
+      --example-color-dark: #aaa;
+      --file-structure-bg: #f5f5f5;
+      --file-structure-text: #1e2a3a;
+      --code-bg: #f0f0f0;
+      --code-text: #1e2a3a;
+    }
+
+    body.dark {
+      --header-bg-light: rgba(10, 12, 16, 0.94);
+      --header-border-light: rgba(255, 255, 255, 0.1);
+      --footer-bg-light: rgba(15, 17, 22, 0.92);
+      --footer-border-light: rgba(255, 255, 255, 0.08);
+      --btn-bg-light: rgba(255, 255, 255, 0.12);
+      --btn-text-light: #e0e0e0;
+      --body-bg-light: #0a0c10;
+      --content-text-light: #b9c6d4;
+      --footer-text-light: #aaa;
+      --tab-active-color-light: #25F4EE;
+      --example-color-light: #aaa;
+      --file-structure-bg: #0a0a14;
+      --file-structure-text: #bbddff;
+      --code-bg: #0a0a14;
+      --code-text: #bbddff;
+    }
+
+    /* ========== 2. BASE BODY & TYPOGRAPHY ========== */
+    body {
+      background: var(--body-bg-light);
+      transition: background 0.2s ease;
+      font-family: 'Roboto', system-ui, sans-serif;
+      font-weight: 400;
+      font-size: 0.8rem;
+      height: 100vh;
+      position: relative;
+      color: var(--content-text-light);
+      padding-top: calc(env(safe-area-inset-top) + var(--header-height));
+      overflow: hidden;
+    }
+
+    h2, h3, .note strong {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 {
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    .logo-container {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.1rem;
+    }
+
+    .tab-btn, button, .theme-switcher, .method {
+      font-family: 'Lato', sans-serif;
+    }
+
+    code, .code, .path, .required-inputs, .response, .method, .endpoint::after {
+      font-family: 'Source Code Pro', monospace;
+    }
+
+    /* Prevent text selection on buttons (long press) */
+    button, .tab-btn, .theme-switcher, #saveKeyBtn, #resetKeyBtn, #sendGetBtn, #sendBatchBtn {
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    /* ========== 3. LAYOUT (HEADER, FOOTER, CONTENT SPACER) ========== */
+    .header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      backdrop-filter: blur(8px);
+      background: var(--header-bg-light);
+      border-bottom: 1px solid var(--header-border-light);
+      z-index: 1000;
+      transition: background 0.2s, border 0.2s;
+      top: env(safe-area-inset-top);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .logo-container i:first-child {
+      background: linear-gradient(135deg, #fe6b00, #f83600);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .theme-switcher {
+      background: var(--btn-bg-light);
+      border: none;
+      border-radius: 40px;
+      padding: 8px 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+      color: var(--btn-text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .theme-switcher:hover {
+      transform: scale(1.02);
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--footer-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+      background: var(--footer-bg-light);
+      border-top: 1px solid var(--footer-border-light);
+      z-index: 1000;
+      transition: background 0.2s, border 0.2s;
+      font-size: 0.7rem;
+      color: var(--footer-text-light);
+    }
+
+    .footer-emblem {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .content-spacer {
+      position: absolute;
+      width: 100%;
+      top: calc(env(safe-area-inset-top) + var(--header-height));
+      right: 0px;
+      height: calc(100vh - env(safe-area-inset-top) - var(--header-height) - var(--footer-height) - 0px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    /* ========== 4. PANES & TABS ========== */
+    .pane {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(4px);
+      padding: 16px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      transition: background 0.2s;
+      flex: 1;
+      width: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    body.dark .pane {
+      background: rgba(20, 25, 35, 0.7);
+    }
+    .pane {
+      display: none;
+    }
+    .pane.active {
+      display: block;
+    }
+
+    .tabs {
+      width: 100%;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--footer-bg-light);
+      border-bottom: 1px solid var(--footer-border-light);
+      z-index: 1000;
+      transition: background 0.2s, border 0.2s;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      margin-top: 5px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      flex: 1;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--content-text-light);
+      height: 100%;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 4px;
+      min-width: 0;
+    }
+    .tab-btn span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .tab-btn i {
+      flex-shrink: 0;
+    }
+    .tab-btn.active {
+      border-bottom: 2px solid var(--tab-active-color-light);
+      color: var(--tab-active-color-light);
+    }
+    body.dark .tab-btn.active {
+      border-bottom-color: var(--tab-active-color-dark);
+      color: var(--tab-active-color-dark);
+    }
+    .tab-btn.active i {
+      color: var(--tab-active-color-light);
+    }
+    body.dark .tab-btn.active i {
+      color: var(--tab-active-color-dark);
+    }
+
+    /* ========== 5. ENDPOINT CARDS ========== */
+    .endpoint {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border-left: 4px solid #fe6b00;
+      position: relative;
+    }
+    body.dark .endpoint {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .endpoint::after {
+      content: attr(data-index);
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: #fe6b00;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .method {
+      display: inline-block;
+      background: #1e1e2f;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: #ffb347;
+    }
+
+    .path {
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin: 8px 0;
+      color: #fe8c00;
+    }
+
+    .desc {
+      font-size: 0.75rem;
+      margin: 8px 0;
+    }
+
+    .required-inputs {
+      font-size: 0.65rem;
+      margin-top: 6px;
+      color: var(--tab-active-color-light);
+      background: rgba(37, 244, 238, 0.15);
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    body.dark .required-inputs {
+      color: var(--tiktok-cyan);
+    }
+    .required-inputs .example {
+      color: var(--example-color-light);
+      margin-left: 6px;
+    }
+    body.dark .required-inputs .example {
+      color: var(--example-color-dark);
+    }
+
+    .code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 12px;
+      padding: 8px;
+      font-size: 0.7rem;
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+
+    /* ========== 6. INTERACTIVE CONSOLE ========== */
+    .input-group {
+      margin-bottom: 12px;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--header-border-light);
+      background: var(--header-bg-light);
+      color: var(--content-text-light);
+      font-size: 0.75rem;
+    }
+
+    button {
+      background: var(--btn-bg-light);
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      color: var(--btn-text-light);
+      font-weight: 500;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      transition: 0.2s;
+    }
+    button:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+
+    .response {
+      background: #0a0a14;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 0.7rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #bbddff;
+      margin-top: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* ========== 7. SUMMARY TABLE & FILE STRUCTURE ========== */
+    .summary-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      margin: 6px 0;
+      font-size: 0.7rem;
+    }
+    .summary-table th, .summary-table td {
+      border: 1px solid var(--header-border-light);
+      padding: 2px 3px;
+      text-align: left;
+      overflow-wrap: break-word;
+    }
+    .summary-table th {
+      text-align: center;
+      background: var(--btn-bg-light);
+      font-weight: 600;
+    }
+    .summary-table tr td:nth-child(2) {
+      text-align: center;
+    }
+    .summary-table tr td:nth-child(1), .summary-table tr th:nth-child(1) {
+      display: none;
+    }
+
+    #paneSummary {
+      padding: 8px;
+    }
+
+    .file-structure {
+      background: var(--file-structure-bg);
+      color: var(--file-structure-text);
+      border-radius: 12px;
+      padding: 10px;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.7rem;
+      margin-top: 6px;
+      overflow-x: auto;
+    }
+
+    /* ========== 8. NOTES & LISTS ========== */
+    .note {
+      background: rgba(254, 44, 85, 0.15);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 16px;
+    }
+    ul {
+      margin-left: 20px;
+      margin-top: 10px;
+      font-size: 0.75rem;
+    }
+
+    /* ========== 9. OVERLAYS & TOASTS ========== */
+    .fullscreen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(12px);
+      background: rgba(0,0,0,0.7);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .fullscreen-overlay.hidden {
+      display: none;
+    }
+    .overlay-card {
+      background: var(--header-bg-light);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      padding: 24px;
+      max-width: 400px;
+      width: 80%;
+      text-align: center;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+      border: 1px solid var(--header-border-light);
+    }
+    .overlay-card h2 {
+      color: var(--tiktok-pink);
+      margin-bottom: 16px;
+    }
+    .overlay-card input {
+      width: 100%;
+      padding: 8px;
+      margin: 16px 0;
+      border-radius: 40px;
+      border: 1px solid var(--tiktok-pink);
+      background: var(--body-bg-light);
+      color: var(--content-text-light);
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.8rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 20px;
+      background: #1a1a2e;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      z-index: 3000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.3s;
+      max-width: 350px;
+      backdrop-filter: blur(8px);
+      font-family: 'Roboto', sans-serif;
+    }
+    .toast.error { background: #c73e1d; }
+    .toast.success { background: #1f8a4c; }
+    .toast.info { background: #2c5282; }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.5);
+      z-index: 2500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(255,255,255,0.3);
+      border-top: 6px solid var(--tiktok-pink);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .loading-text {
+      color: white;
+      font-weight: bold;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    /* ========== 10. KEYFRAMES ========== */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="missingKeyOverlay" class="fullscreen-overlay hidden">
+    <div class="overlay-card">
+      <h2><i class="fas fa-key"></i> 404 – API Key Missing</h2>
+      <p>No API key found in local storage.<br>Please enter your secret key to continue.</p>
+      <input type="text" id="keyInput404" placeholder="Your API Secret Key" autocomplete="off">
+      <button id="saveKeyBtn"><i class="fas fa-save"></i> Save & Unlock</button>
+    </div>
+  </div>
+
+  <header class="header" id="mainHeader">
+    <div class="logo-container">
+      <i class="fas fa-music"></i>
+      <span>TikTok Proxy API</span>
+    </div>
+    <button class="theme-switcher" id="themeToggle" title="Toggle theme">
+      <i class="fas fa-moon"></i>
+    </button>
+  </header>
+
+  <footer class="footer" id="mainFooter">
+    <div class="footer-emblem">
+      <i class="fas fa-bolt"></i> TikTok Proxy API · Use responsibly
+    </div>
+  </footer>
+
+  <div class="content-spacer">
+    <!-- Overview Pane -->
+    <div class="pane active" id="paneOverview">
+      <h2><i class="fas fa-book-open"></i> TikTok Proxy API</h2>
+      <p>This API provides access to public TikTok profile data, statistics, and user videos without any official TikTok SDK. It scrapes the public HTML of TikTok profiles and extracts embedded JSON data.</p>
+      <p>All endpoints require an API key sent via the <code>X-API-Key</code> or <code>Authorization</code> header.</p>
+      <p><strong>Base URL:</strong> <code>https://tik-proxy.vercel.app</code></p>
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--header-border-light);">
+        <h3><i class="fas fa-lock"></i> Authentication Details</h3>
+        <p>Every API request must include a valid API key. Provide it via:</p>
+        <ul>
+          <li><code>X-API-Key: your_secret_key</code></li>
+          <li><code>Authorization: your_secret_key</code></li>
+        </ul>
+        <p>Set <code>API_SECRET_KEY</code> in Vercel environment variables.</p>
+        <div class="code"># Example header<br>X-API-Key: sk_live_abc123def456</div>
+        <button id="resetKeyBtn" style="margin-top: 16px;"><i class="fas fa-trash-alt"></i> Reset API Key</button>
+      </div>
+      <div class="note">
+        <i class="fas fa-exclamation-triangle"></i> <strong>Disclaimer:</strong> This service is for educational purposes only. Please respect TikTok’s terms of service and use responsibly.
+      </div>
+    </div>
+
+    <!-- Endpoints Pane -->
+    <div class="pane" id="paneEndpoints">
+      <h2><i class="fas fa-link"></i> Available Endpoints</h2>
+      <div class="endpoint" data-index="1">
+        <div class="method">GET</div>
+        <div class="path">/api/full?username=...</div>
+        <div class="desc">Complete profile + stats (avatar, bio, verified, follower/following counts, heart count, video count).</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: username query param <span class="example">(e.g., ?username=tiktok)</span></div>
+        <div class="code">{"success":true,"profile":{"username":"tiktok","displayName":"TikTok"},"stats":{"followerCount":12345678}}</div>
+      </div>
+      <div class="endpoint" data-index="2">
+        <div class="method">GET</div>
+        <div class="path">/api/tiktok?username=...</div>
+        <div class="desc">Basic profile: username, display name, avatar URL, followers, following, total likes, total videos.</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: username query param <span class="example">(e.g., ?username=tiktok)</span></div>
+        <div class="code">{"username":"tiktok","display_name":"TikTok","followers":12345678}</div>
+      </div>
+      <div class="endpoint" data-index="3">
+        <div class="method">GET</div>
+        <div class="path">/api/tiktokFull?username=...</div>
+        <div class="desc">Raw full user detail object from TikTok’s embedded data.</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: username query param <span class="example">(e.g., ?username=tiktok)</span></div>
+        <div class="code">{"userInfo":{"user":{"uniqueId":"tiktok"},"stats":{...}}}</div>
+      </div>
+      <div class="endpoint" data-index="4">
+        <div class="method">GET</div>
+        <div class="path">/api/stats?username=...</div>
+        <div class="desc">Only stats: followerCount, followingCount, heartCount, videoCount, diggCount.</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: username query param <span class="example">(e.g., ?username=tiktok)</span></div>
+        <div class="code">{"followerCount":12345678,"followingCount":123,"heartCount":987654321}</div>
+      </div>
+      <div class="endpoint" data-index="5">
+        <div class="method">GET</div>
+        <div class="path">/api/user/[username]</div>
+        <div class="desc">Nested route returns user detail JSON.</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: username in path <span class="example">(e.g., /api/user/therock)</span></div>
+        <div class="code">{"userInfo":{"user":{"uniqueId":"therock"},"stats":{...}}}</div>
+      </div>
+      <div class="endpoint" data-index="6">
+        <div class="method">GET</div>
+        <div class="path">/api/user/[username]/stats</div>
+        <div class="desc">Stats from nested route (alternative to /api/stats).</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: username in path <span class="example">(e.g., /api/user/therock/stats)</span></div>
+        <div class="code">{"followerCount":12345678,"followingCount":123}</div>
+      </div>
+      <div class="endpoint" data-index="7">
+        <div class="method">GET</div>
+        <div class="path">/api/user/[username]/videos?limit=12</div>
+        <div class="desc">Fetch user videos (up to 50). Returns video URLs, cover, stats, hashtags.</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: username in path; optional: limit query <span class="example">(e.g., /api/user/tiktok/videos?limit=5)</span></div>
+        <div class="code">{"success":true,"videos":[{"id":"123","playCount":1000000}]}</div>
+      </div>
+      <div class="endpoint" data-index="8">
+        <div class="method">POST</div>
+        <div class="path">/api/batch</div>
+        <div class="desc">Batch fetch multiple profiles. Body: <code>{ "usernames": ["user1","user2"] }</code>.</div>
+        <div class="required-inputs"><i class="fas fa-question-circle"></i> Required: JSON body with array "usernames" <span class="example">(e.g., { "usernames": ["tiktok", "therock"] })</span></div>
+        <div class="code">{"success":true,"results":[{"username":"tiktok","success":true}]}</div>
+      </div>
+    </div>
+
+    <!-- Interactive Pane (apiKey type="password") -->
+    <div class="pane" id="paneInteractive">
+      <h2><i class="fas fa-vial"></i> Interactive Test Console</h2>
+      <div class="input-group">
+        <label><i class="fas fa-globe"></i> Base URL:</label>
+        <input type="text" id="baseUrl" value="https://tik-proxy.vercel.app" placeholder="https://tik-proxy.vercel.app">
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-key"></i> API Key (X-API-Key):</label>
+        <input type="password" id="apiKey" placeholder="Enter your API secret key">
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-user"></i> Username:</label>
+        <input type="text" id="username" placeholder="e.g., tiktok" value="tiktok">
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-list-ol"></i> Limit (for videos, max 50):</label>
+        <input type="number" id="limit" value="5" min="1" max="50">
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-bezier-curve"></i> Endpoint:</label>
+        <select id="endpointSelect">
+          <option value="/api/full">GET /api/full</option>
+          <option value="/api/tiktok">GET /api/tiktok</option>
+          <option value="/api/tiktokFull">GET /api/tiktokFull</option>
+          <option value="/api/stats">GET /api/stats</option>
+          <option value="/api/user/[username]">GET /api/user/[username]</option>
+          <option value="/api/user/[username]/stats">GET /api/user/[username]/stats</option>
+          <option value="/api/user/[username]/videos">GET /api/user/[username]/videos</option>
+        </select>
+      </div>
+      <button id="sendGetBtn"><i class="fas fa-paper-plane"></i> Send GET</button>
+      <button id="sendBatchBtn"><i class="fas fa-layer-group"></i> Batch POST</button>
+      <div class="response" id="responseArea">Response will appear here...</div>
+    </div>
+
+    <!-- Summary Pane -->
+    <div class="pane" id="paneSummary">
+      <h2><i class="fas fa-table-list"></i> Summary</h2>
+      <h3>Endpoint Table</h3>
+      <table class="summary-table">
+        <thead>
+          <tr><th style="width:7%">#</th><th style="width:17%">Method</th><th>Endpoint</th><th>File location</th></tr>
+        </thead>
+        <tbody>
+          <tr><td style="display:none">1</td><td>GET</td><td>/api/full?username=...</td><td>api/full.js</td></tr>
+          <tr><td style="display:none">2</td><td>GET</td><td>/api/tiktok?username=...</td><td>api/tiktok.js</td></tr>
+          <tr><td style="display:none">3</td><td>GET</td><td>/api/tiktokFull?username=...</td><td>api/tiktokFull.js</td></tr>
+          <tr><td style="display:none">4</td><td>GET</td><td>/api/stats?username=...</td><td>api/stats.js</td></tr>
+          <tr><td style="display:none">5</td><td>GET</td><td>/api/user/[username]</td><td>api/user/[username].js</td></tr>
+          <tr><td style="display:none">6</td><td>GET</td><td>/api/user/[username]/stats</td><td>api/user/[username]/stats.js</td></tr>
+          <tr><td style="display:none">7</td><td>GET</td><td>/api/user/[username]/videos</td><td>api/user/[username]/videos.js</td></tr>
+          <tr><td style="display:none">8</td><td>POST</td><td>/api/batch</td><td>api/batch.js</td></tr>
+        </tbody>
+      </table>
+      <h3>File Structure</h3>
+      <div class="file-structure">
+        tiktok-proxy/<br>
+        ├── public/<br>
+        │   └── index.html<br>
+        ├── api/<br>
+        │   ├── user/<br>
+        │   │   ├── [username].js<br>
+        │   │   └── [username]/<br>
+        │   │       ├── stats.js<br>
+        │   │       └── videos.js<br>
+        │   ├── batch.js<br>
+        │   ├── full.js<br>
+        │   ├── stats.js<br>
+        │   ├── tiktok.js<br>
+        │   └── tiktokFull.js<br>
+        └── (other files)
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-pane="paneOverview"><i class="fas fa-home"></i><span>Overview</span></button>
+      <button class="tab-btn" data-pane="paneEndpoints"><i class="fas fa-plug"></i><span>Endpoints</span></button>
+      <button class="tab-btn" data-pane="paneInteractive"><i class="fas fa-flask"></i><span>Try it</span></button>
+      <button class="tab-btn" data-pane="paneSummary"><i class="fas fa-table-list"></i><span>Summary</span></button>
+    </div>
+  </div>
+
+  <script>
+    // ========== Toast ==========
+    let toastTimeout = null;
+    function showToast(message, type = 'info') {
+      const existingToast = document.querySelector('.toast');
+      if (existingToast) existingToast.remove();
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      let iconHtml = '';
+      if (type === 'error') iconHtml = '<i class="fas fa-times-circle"></i>';
+      else if (type === 'success') iconHtml = '<i class="fas fa-check-circle"></i>';
+      else iconHtml = '<i class="fas fa-info-circle"></i>';
+      toast.innerHTML = `${iconHtml} ${message}`;
+      document.body.appendChild(toast);
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.remove(), 5000);
+    }
+
+    // ========== Loading Overlay ==========
+    let loadingOverlay = null;
+    function showLoading(message = 'Request in progress...') {
+      if (loadingOverlay) hideLoading();
+      loadingOverlay = document.createElement('div');
+      loadingOverlay.className = 'loading-overlay';
+      loadingOverlay.innerHTML = `<div class="spinner"></div><div class="loading-text">${message}</div>`;
+      document.body.appendChild(loadingOverlay);
+    }
+    function hideLoading() {
+      if (loadingOverlay) { loadingOverlay.remove(); loadingOverlay = null; }
+    }
+
+    // ========== Missing Key Overlay ==========
+    const overlay = document.getElementById('missingKeyOverlay');
+    const saveKeyBtn = document.getElementById('saveKeyBtn');
+    const keyInput404 = document.getElementById('keyInput404');
+    function checkAndShowOverlay() {
+      if (!localStorage.getItem('myKey')) overlay.classList.remove('hidden');
+      else overlay.classList.add('hidden');
+    }
+    function hideMissingKeyOverlay() { overlay.classList.add('hidden'); }
+    saveKeyBtn.addEventListener('click', () => {
+      const newKey = keyInput404.value.trim();
+      if (newKey) {
+        localStorage.setItem('myKey', newKey);
+        showToast('API key saved successfully', 'success');
+        hideMissingKeyOverlay();
+        const apiKeyField = document.getElementById('apiKey');
+        if (apiKeyField) apiKeyField.value = newKey;
+      } else showToast('Please enter a valid key', 'error');
+    });
+    checkAndShowOverlay();
+
+    // ========== Theme Toggle ==========
+    const toggleBtn = document.getElementById('themeToggle');
+    const body = document.body;
+    function setTheme(isDark) {
+      if (isDark) {
+        body.classList.add('dark');
+        toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        toggleBtn.setAttribute('title', 'Light mode');
+      } else {
+        body.classList.remove('dark');
+        toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+        toggleBtn.setAttribute('title', 'Dark mode');
+      }
+    }
+    toggleBtn.addEventListener('click', () => setTheme(!body.classList.contains('dark')));
+    setTheme(false);
+
+    // ========== Tab Switching ==========
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.pane');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const paneId = btn.getAttribute('data-pane');
+        tabBtns.forEach(b => b.classList.remove('active'));
+        panes.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(paneId).classList.add('active');
+      });
+    });
+
+    // ========== Interactive API Calls (with base URL) ==========
+    const baseUrlInput = document.getElementById('baseUrl');
+    const apiKeyInput = document.getElementById('apiKey');
+    const usernameInput = document.getElementById('username');
+    const limitInput = document.getElementById('limit');
+    const endpointSelect = document.getElementById('endpointSelect');
+    const sendGetBtn = document.getElementById('sendGetBtn');
+    const sendBatchBtn = document.getElementById('sendBatchBtn');
+    const responseArea = document.getElementById('responseArea');
+
+    // Pre-populate API key from localStorage
+    const storedKey = localStorage.getItem('myKey');
+    if (storedKey) apiKeyInput.value = storedKey;
+
+    async function callApi(urlPath, options = {}) {
+      let baseUrl = baseUrlInput.value.trim();
+      if (!baseUrl) {
+        showToast('Base URL is required.', 'error');
+        return;
+      }
+      baseUrl = baseUrl.replace(/\/$/, '');
+      const fullUrl = baseUrl + urlPath;
+
+      let apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        const stored = localStorage.getItem('myKey');
+        if (stored) { apiKey = stored; apiKeyInput.value = stored; }
+        else { showToast('API key required.', 'error'); return; }
+      }
+      const headers = { 'X-API-Key': apiKey, ...options.headers };
+      showLoading('Sending request...');
+      try {
+        const res = await fetch(fullUrl, { ...options, headers });
+        const data = await res.json();
+        responseArea.textContent = JSON.stringify(data, null, 2);
+        if (!res.ok) showToast(`HTTP ${res.status}: ${data.error || 'Request failed'}`, 'error');
+        else showToast('Request successful', 'success');
+      } catch (err) {
+        responseArea.textContent = `Request failed: ${err.message}`;
+        showToast(`Network error: ${err.message}`, 'error');
+      } finally { hideLoading(); }
+    }
+
+    sendGetBtn.addEventListener('click', () => {
+      let selected = endpointSelect.value;
+      const username = usernameInput.value.trim();
+      const limit = limitInput.value;
+      if (!username) { showToast('Username required', 'error'); return; }
+      let urlPath = selected.replace('[username]', username);
+      if (selected.includes('/videos')) urlPath += `?limit=${limit}`;
+      else if (selected === '/api/full' || selected === '/api/tiktok' || selected === '/api/tiktokFull' || selected === '/api/stats')
+        urlPath += `?username=${username}`;
+      callApi(urlPath, { method: 'GET' });
+    });
+
+    sendBatchBtn.addEventListener('click', () => {
+      const usernames = usernameInput.value.split(',').map(u => u.trim());
+      if (!usernames.length || usernames[0] === '') { showToast('Enter usernames', 'error'); return; }
+      callApi('/api/batch', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ usernames }) 
+      });
+    });
+
+    // Reset key button
+    const resetKeyBtn = document.getElementById('resetKeyBtn');
+    if (resetKeyBtn) {
+      resetKeyBtn.addEventListener('click', () => {
+        localStorage.removeItem('myKey');
+        apiKeyInput.value = '';
+        showToast('API key cleared. Reloading...', 'info');
+        setTimeout(() => location.reload(), 1500);
+      });
+    }
+
+    // Sync API key input with localStorage
+    apiKeyInput.addEventListener('change', () => {
+      const newKey = apiKeyInput.value.trim();
+      if (newKey) { localStorage.setItem('myKey', newKey); hideMissingKeyOverlay(); }
+    });
+  </script>
+</body>
+</html>
