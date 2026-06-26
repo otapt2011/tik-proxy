@@ -113,7 +113,10 @@ export default async function handler(req, res) {
         userDetail = data['__DEFAULT_SCOPE__']?.['webapp.user-detail'];
       } catch(e) {}
     }
-
+let secUid = null;
+if (userDetail?.userInfo?.user?.secUid) {
+  secUid = userDetail.userInfo.user.secUid;
+}
     // Search for region across ALL JSON data (including userDetail)
     let regionInfo = null;
 
@@ -150,6 +153,7 @@ export default async function handler(req, res) {
     const responseData = {
       success: true,
       data: userDetail || null,
+      secUid: secUid,
       region: regionInfo ? regionInfo.value : null,
       regionSource: regionInfo ? regionInfo.source : null,
       timestamp: new Date().toISOString()
