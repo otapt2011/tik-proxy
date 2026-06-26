@@ -18,51 +18,47 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { secUid } = req.query;   // ← changed from path to query? No, keep as is – but wait, you're using [secUid].js so it's req.query.secUid. That's actually correct for dynamic routes in Vercel: req.query.secUid works. I'll keep it as is.
-  const cursor = req.query.cursor || '0';
+  const { secUid } = req.query;    // secUid from query string
   if (!secUid) return res.status(400).json({ error: 'Missing secUid' });
 
   try {
-    const tiktokUrl = `https://www.tiktok.com/api/post/item_list/?secUid=${encodeURIComponent(secUid)}&cursor=${cursor}&count=30`;
-    const response = await fetch(tiktokUrl, {
+    // Step 1 – find a public username that belongs to this secUid.
+    // We can use TikTok's user/detail API to get the uniqueId (username) from secUid.
+    // That endpoint is less blocked, so it's a safe first step.
+    const userApiUrl = `https://www.tiktok.com/api/user/detail/?secUid=${encodeURIComponent(secUid)}`;
+    const userRes = await fetch(userApiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
         'Referer': 'https://www.tiktok.com/',
-        'Accept': 'application/json, text/plain, */*',
-        // Uncomment and set TIKTOK_COOKIES in env if blocked
-        // 'Cookie': process.env.TIKTOK_COOKIES || ''
       }
     });
+    if (!userRes.ok) throw new Error(`User API returned ${userRes.status}`);
+    const userData = await userRes.json();
+    const username = userData?.userInfo?.user?.uniqueId || userData?.user?.uniqueId;
+    if (!username) throw new Error('Could not determine username from secUid');
 
-    const rawText = await response.text();
-    if (!response.ok) {
-      return res.status(200).json({
-        success: false,
-        error: `TikTok returned ${response.status}`,
-        details: rawText.substring(0, 1000)
-      });
-    }
+    // Step 2 – fetch the profile HTML (same way as your /api/full.js)
+    const profileUrl = `https://www.tiktok.com/@${username}`;
+    const profileRes = await fetch(profileUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
+    if (!profileRes.ok) throw new Error(`Profile page returned ${profileRes.status}`);
+    const html = await profileRes.text();
 
-    let data;
-    try {
-      data = JSON.parse(rawText);
-    } catch (parseErr) {
-      return res.status(200).json({
-        success: false,
-        error: 'Failed to parse TikTok JSON',
-        details: rawText.substring(0, 1000)
-      });
-    }
+    // Step 3 – extract the hydration script
+    const match = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application\/json">(.*?)<\/script>/s);
+    if (!match) throw new Error('Hydration script not found');
+    const universalData = JSON.parse(match[1]);
 
-    const itemList = data.itemList;
-    if (!itemList) {
-      return res.status(200).json({
-        success: false,
-        error: 'TikTok response did not contain itemList',
-        data   // send full data for inspection
-      });
-    }
+    // Step 4 – get the user-detail object, which contains the video list
+    const userDetail = universalData['__DEFAULT_SCOPE__']?.['webapp.user-detail'];
+    if (!userDetail) throw new Error('User detail not found in hydration data');
+
+    // The video list is typically under userDetail.postItemList (or sometimes userDetail.itemList)
+    const itemList = userDetail.postItemList || userDetail.itemList || [];
+    const cursor = userDetail.cursor || '0';
+    const hasMore = userDetail.hasMore ?? false;
 
     const videos = itemList.map(item => ({
       videoId: item.aweme_id,
@@ -83,8 +79,9 @@ export default async function handler(req, res) {
     res.status(200).json({
       success: true,
       secUid,
-      cursor: data.cursor,
-      hasMore: data.hasMore,
+      username,
+      cursor,
+      hasMore,
       videoCount: videos.length,
       videos,
       timestamp: new Date().toISOString()
